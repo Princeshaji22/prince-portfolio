@@ -1,3 +1,4 @@
+import ForceGraph2D from 'react-force-graph-2d';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { 
@@ -136,6 +137,88 @@ const CERTIFICATIONS = [
 ];
 
 // --- COMPONENTS ---
+
+const SkillGraph = () => {
+  const containerRef = React.useRef(null);
+  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
+
+  React.useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight
+        });
+      }
+    };
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  const graphData = {
+    nodes: [
+      { id: 'Odoo ERP', group: 1, val: 25 },
+      { id: 'Python', group: 2, val: 20 },
+      { id: 'RAG', group: 3, val: 18 },
+      { id: 'LLMs', group: 3, val: 15 },
+      { id: 'PostgreSQL', group: 4, val: 15 },
+      { id: 'React', group: 5, val: 12 },
+      { id: 'FastAPI', group: 2, val: 12 },
+      { id: 'AI Agents', group: 3, val: 14 }
+    ],
+    links: [
+      { source: 'Python', target: 'Odoo ERP' },
+      { source: 'Python', target: 'FastAPI' },
+      { source: 'Odoo ERP', target: 'PostgreSQL' },
+      { source: 'Python', target: 'RAG' },
+      { source: 'RAG', target: 'LLMs' },
+      { source: 'React', target: 'FastAPI' },
+      { source: 'Odoo ERP', target: 'RAG' },
+      { source: 'LLMs', target: 'AI Agents' },
+      { source: 'AI Agents', target: 'Odoo ERP' }
+    ]
+  };
+
+  return (
+    <div ref={containerRef} className="w-full h-80 sm:h-96 glass-panel overflow-hidden mt-12 rounded-2xl relative cursor-move hover:border-brand/30 transition-colors duration-500">
+      <div className="absolute top-4 left-4 z-10 text-text-secondary text-sm font-mono flex items-center gap-2 bg-bg/50 px-3 py-1.5 rounded-full backdrop-blur-md border border-border/50">
+        <div className="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
+        Interactive Skill Topology
+      </div>
+      <div className="absolute bottom-4 right-4 z-10 text-xs text-text-secondary font-mono opacity-50">
+        Drag to interact
+      </div>
+      {dimensions.width > 0 && (
+        <ForceGraph2D
+          width={dimensions.width}
+          height={dimensions.height}
+          graphData={graphData}
+          nodeAutoColorBy="group"
+          nodeRelSize={6}
+          linkColor={() => 'rgba(255,255,255,0.1)'}
+          backgroundColor="transparent"
+          d3VelocityDecay={0.3}
+          d3AlphaDecay={0.02}
+          nodeCanvasObject={(node, ctx, globalScale) => {
+            const label = node.id;
+            const fontSize = 12/globalScale;
+            ctx.font = `${fontSize}px Inter`;
+            ctx.fillStyle = node.color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.val / 2, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(label, node.x, node.y + (node.val/2) + 6);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 
 const playSound = (type = 'click') => {
   try {
@@ -618,6 +701,12 @@ const SectionHeading = ({ children, align = "left" }) => {
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
   
   // Scroll driven animation values for Hero
   const { scrollY } = useScroll();
@@ -627,6 +716,10 @@ export default function App() {
   return (
     <div className="bg-bg text-text-primary min-h-screen selection:bg-brand/30 selection:text-white font-sans">
       <CustomCursor />
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-brand origin-left z-50 shadow-[0_0_10px_rgba(220,38,38,0.8)]"
+        style={{ scaleX }}
+      />
       <div className="noise-bg"></div>
       <AnimatePresence>
         {loading && <Preloader onComplete={() => setLoading(false)} />}
@@ -754,6 +847,7 @@ export default function App() {
                     </div>
                   </motion.div>
                 </div>
+                <SkillGraph />
               </div>
             </section>
 
