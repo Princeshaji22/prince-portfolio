@@ -1,5 +1,7 @@
 import ForceGraph2D from 'react-force-graph-2d';
 import React, { useState, useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import NET from 'vanta/dist/vanta.net.min';
 import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { 
   Mail, Phone, Globe, ExternalLink, Code2, Database, BrainCircuit, 
@@ -137,6 +139,61 @@ const CERTIFICATIONS = [
 ];
 
 // --- COMPONENTS ---
+
+const Background3D = () => {
+  const [vantaEffect, setVantaEffect] = React.useState(null);
+  const myRef = React.useRef(null);
+  
+  React.useEffect(() => {
+    // Only init if not mobile
+    if (!vantaEffect && window.innerWidth > 768) {
+      window.THREE = THREE;
+      setVantaEffect(NET({
+        el: myRef.current,
+        THREE: THREE,
+        color: 0xdc2626, // brand color
+        backgroundColor: document.documentElement.classList.contains('light') ? 0xf8fafc : 0x0a0a0a,
+        points: 12.00,
+        maxDistance: 22.00,
+        spacing: 18.00,
+        showDots: true,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        scaleMobile: 1.00
+      }));
+    }
+    
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class' && window.vantaEffectInstance) {
+          const isLight = document.documentElement.classList.contains('light');
+          window.vantaEffectInstance.setOptions({
+            backgroundColor: isLight ? 0xf8fafc : 0x0a0a0a
+          });
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => {
+      if (vantaEffect) vantaEffect.destroy();
+      observer.disconnect();
+    }
+  }, [vantaEffect]);
+
+  // Save instance to window for observer to access since it's in a closure
+  React.useEffect(() => {
+    window.vantaEffectInstance = vantaEffect;
+  }, [vantaEffect]);
+
+  return <div ref={myRef} className="fixed inset-0 z-[-2] w-full h-full pointer-events-none opacity-40"></div>;
+};
+
 
 const SkillGraph = () => {
   const containerRef = React.useRef(null);
@@ -716,6 +773,7 @@ export default function App() {
   return (
     <div className="bg-bg text-text-primary min-h-screen selection:bg-brand/30 selection:text-white font-sans">
       <CustomCursor />
+      <Background3D />
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-brand origin-left z-50 shadow-[0_0_10px_rgba(220,38,38,0.8)]"
         style={{ scaleX }}
