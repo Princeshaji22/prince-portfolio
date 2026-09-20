@@ -148,7 +148,7 @@ const Background3D = () => {
     // Only init if not mobile
     if (!vantaEffect && window.innerWidth > 768) {
       window.THREE = THREE;
-      setVantaEffect(NET({
+      setVantaEffect((NET.default || NET)({
         el: myRef.current,
         THREE: THREE,
         color: 0xdc2626, // brand color
