@@ -316,8 +316,13 @@ const Terminal = () => {
   const [input, setInput] = React.useState('');
   const endRef = React.useRef(null);
 
+  const isInitialMount = React.useRef(true);
   React.useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [history]);
 
   const handleCommand = (e) => {
