@@ -905,7 +905,7 @@ export default function App() {
                     </div>
                   </motion.div>
                 </div>
-                <SkillGraph />
+
               </div>
             </section>
 
